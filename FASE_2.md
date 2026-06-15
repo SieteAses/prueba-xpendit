@@ -113,13 +113,23 @@ El cliente HTTP usa el `fetch` nativo de Node (sin dependencias nuevas) y se
 
 ### 3.3 Cableado y configuración
 
-`rules-engine.module.ts` elige el provider según `USE_STUB_DATA`:
+`rules-engine.module.ts` usa `USE_STUB_DATA` para elegir **únicamente** el
+provider de tasas de cambio:
 
 - `USE_STUB_DATA=true` → `StubExchangeRateProvider` (tasas fijas, desarrollo offline).
 - `USE_STUB_DATA=false` → `OpenExchangeRateProvider` (tasas reales).
 
 El antiguo `PendingExchangeRateProvider` (marcador que fallaba a propósito) ya no
 es necesario y se eliminó.
+
+> **Cambio respecto a la Fase 1:** en la Fase 1 el flag `USE_STUB_DATA` también
+> alternaba el repositorio de políticas (`InMemoryPolicyRepository` vs. un
+> `PendingPolicyRepository` que fallaba a propósito, marcador de una BD futura).
+> Este proyecto **no se conecta a una base de datos**: las políticas viven
+> siempre en memoria. Por eso el repositorio se cablea **fijo** a
+> `InMemoryPolicyRepository`, el `PendingPolicyRepository` se eliminó, y el flag
+> queda dedicado solo a las tasas. Así `USE_STUB_DATA=false` ya no rompe el
+> endpoint: convierte con tasas reales contra políticas en memoria.
 
 ---
 

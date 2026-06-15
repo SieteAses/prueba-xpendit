@@ -349,3 +349,11 @@ la BD real y la API de tasas, se implementan `PendingPolicyRepository` y
 el caso de uso ni el dominio**—. Mientras tanto, los `Pending*` fallan de forma
 explícita en lugar de devolver datos falsos en silencio, dejando claro qué falta
 por implementar.
+
+> **Actualización (Fase 2):** la tabla de arriba describe el diseño original de
+> la Fase 1. En la Fase 2, el lado de `PolicyRepository` se simplificó:
+> introducir una base de datos para una única política con tres reglas sería
+> **overkill** para el alcance de este proyecto. Las políticas viven siempre en
+> memoria (`InMemoryPolicyRepository`), el `PendingPolicyRepository` se eliminó,
+> y el flag `USE_STUB_DATA` quedó dedicado **solo** a alternar el provider de
+> tasas (stub fijo vs. Open Exchange Rates real). Ver `FASE_2.md`, §3.3.
