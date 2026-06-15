@@ -52,14 +52,19 @@ export class ReviewPolicyUseCase {
     const category = parseEnum(Category, command.category, 'category');
     const costCenter = parseEnum(CostCenter, command.costCenter, 'costCenter');
 
+    const expenseDate = new Date(command.date);
     let money = Money.create(command.amount, currency);
     if (currency !== BASE_CURRENCY) {
-      money = await this.exchangeRate.convert(money, BASE_CURRENCY);
+      money = await this.exchangeRate.convert(
+        money,
+        BASE_CURRENCY,
+        expenseDate,
+      );
     }
 
     const expense = Expense.create(
       money,
-      new Date(command.date),
+      expenseDate,
       category,
       Id.create(command.expenseId),
     );

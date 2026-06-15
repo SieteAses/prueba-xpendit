@@ -8,8 +8,9 @@ import {
   POLICY_REPOSITORY,
 } from './application/ports/policy-repository.port';
 import { ReviewPolicyUseCase } from './application/use-cases/review-policy.use-case';
+import { openExchangeRatesConfig } from './infrastructure/config/open-exchange-rates.config';
 import { useStubData } from './infrastructure/config/use-stub-data';
-import { PendingExchangeRateProvider } from './infrastructure/exchange-rate/pending-exchange-rate.provider';
+import { OpenExchangeRateProvider } from './infrastructure/exchange-rate/open-exchange-rate.provider';
 import { StubExchangeRateProvider } from './infrastructure/exchange-rate/stub-exchange-rate.provider';
 import { ReviewPolicyController } from './infrastructure/http/review-policy.controller';
 import { InMemoryPolicyRepository } from './infrastructure/persistence/in-memory-policy.repository';
@@ -34,9 +35,13 @@ import { PendingPolicyRepository } from './infrastructure/persistence/pending-po
     },
     {
       provide: EXCHANGE_RATE_PORT,
-      useClass: useStubData()
-        ? StubExchangeRateProvider
-        : PendingExchangeRateProvider,
+      useFactory: (): ExchangeRatePort => {
+        if (useStubData()) {
+          return new StubExchangeRateProvider();
+        }
+        const { appId, baseUrl } = openExchangeRatesConfig();
+        return new OpenExchangeRateProvider(appId, baseUrl);
+      },
     },
     {
       provide: ReviewPolicyUseCase,
