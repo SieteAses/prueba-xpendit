@@ -48,7 +48,7 @@ export class OpenExchangeRateProvider implements ExchangeRatePort {
   private readonly cache = new Map<string, Record<string, number>>();
 
   constructor(
-    private readonly appId: string,
+    private readonly appId: string | undefined,
     private readonly baseUrl: string,
     private readonly client: HistoricalRatesClient = fetchHistoricalRatesClient,
   ) {}
@@ -71,6 +71,13 @@ export class OpenExchangeRateProvider implements ExchangeRatePort {
     const cached = this.cache.get(dateKey);
     if (cached) {
       return cached;
+    }
+
+    if (!this.appId) {
+      throw new Error(
+        'Falta la variable de entorno OPEN_EXCHANGE_RATES_APP_ID. ' +
+          'Defínala para usar el proveedor de tasas real, o use USE_STUB_DATA=true.',
+      );
     }
 
     const url = `${this.baseUrl}/historical/${dateKey}.json?app_id=${this.appId}`;

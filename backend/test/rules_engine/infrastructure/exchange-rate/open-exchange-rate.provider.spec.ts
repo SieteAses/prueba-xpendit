@@ -93,6 +93,16 @@ describe('OpenExchangeRateProvider', () => {
     ).rejects.toThrow(/JPY/);
   });
 
+  it('falla con un mensaje claro si no hay app_id al convertir', async () => {
+    const client = fakeClient({ USD: 1, CLP: 950 });
+    const provider = new OpenExchangeRateProvider(undefined, BASE_URL, client);
+
+    await expect(
+      provider.convert(Money.create(950, Currency.CLP), Currency.USD, DATE),
+    ).rejects.toThrow(/OPEN_EXCHANGE_RATES_APP_ID/);
+    expect(client).not.toHaveBeenCalled();
+  });
+
   it('propaga el error si el cliente HTTP falla', async () => {
     const client: jest.MockedFunction<HistoricalRatesClient> = jest.fn(() =>
       Promise.reject(new Error('429 Too Many Requests')),

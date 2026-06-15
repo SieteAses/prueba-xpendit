@@ -145,8 +145,9 @@ OPEN_EXCHANGE_RATES_APP_ID=tu_app_id_aqui
 OPEN_EXCHANGE_RATES_BASE_URL=https://openexchangerates.org/api
 ```
 
-- `OPEN_EXCHANGE_RATES_APP_ID` es **obligatorio** cuando `USE_STUB_DATA=false`. Si
-  falta, la app falla al arrancar con un mensaje explícito.
+- `OPEN_EXCHANGE_RATES_APP_ID` es **obligatorio** cuando `USE_STUB_DATA=false`. La
+  app arranca igualmente (no se valida al boot); si falta, falla con un mensaje
+  explícito al intentar convertir un gasto que no esté ya en USD.
 - `OPEN_EXCHANGE_RATES_BASE_URL` es opcional (tiene ese valor por defecto).
 - El `.env` está en `.gitignore`: la clave **no se versiona**.
 
