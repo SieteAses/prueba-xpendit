@@ -20,8 +20,8 @@ export class InMemoryPolicyRepository implements PolicyRepository {
   private readonly currentPolicy: Policy =
     InMemoryPolicyRepository.buildCurrentPolicy();
 
-  async findCurrent(): Promise<Policy | null> {
-    return this.currentPolicy;
+  findCurrent(): Promise<Policy | null> {
+    return Promise.resolve(this.currentPolicy);
   }
 
   private static buildCurrentPolicy(): Policy {

@@ -22,6 +22,10 @@ export class StubExchangeRateProvider implements ExchangeRatePort {
     [Currency.ARS]: 900,
   };
 
+  // Implementa el puerto async aunque el cálculo sea síncrono; mantenerlo
+  // `async` hace que `rateFor` (que puede lanzar) se propague como un rechazo
+  // de la promesa, respetando el contrato del puerto.
+  // eslint-disable-next-line @typescript-eslint/require-await
   async convert(money: Money, target: Currency): Promise<Money> {
     const fromRate = this.rateFor(money.getCurrency());
     const toRate = this.rateFor(target);

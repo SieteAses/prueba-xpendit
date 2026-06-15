@@ -8,10 +8,12 @@ import { Policy } from '../../domain/entities/policy.entity';
  * definitiva aún no existe (en lugar de devolver datos silenciosamente).
  */
 export class PendingPolicyRepository implements PolicyRepository {
-  async findCurrent(): Promise<Policy | null> {
-    throw new Error(
-      'Repositorio de políticas real no implementado (pendiente para fases siguientes). ' +
-        'Defina USE_STUB_DATA=true para usar los stubs de la Fase 1.',
+  findCurrent(): Promise<Policy | null> {
+    return Promise.reject(
+      new Error(
+        'Repositorio de políticas real no implementado (pendiente para fases siguientes). ' +
+          'Defina USE_STUB_DATA=true para usar los stubs de la Fase 1.',
+      ),
     );
   }
 }
