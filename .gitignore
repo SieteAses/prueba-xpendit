@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+
+# Build / output
+dist/
+build/
+
+# Tests
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Variables de entorno
+.env
+.env.*.local
+
+# OS
+.DS_Store
+
+# Editores / IDEs
+.idea/
+*.swp
+
+# Claude Code (config local)
+.claude/settings.local.json

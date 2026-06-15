@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "agent",
+            "model": "claude-sonnet-4-6",
+            "timeout": 180,
+            "statusMessage": "Generando documentación del endpoint...",
+            "prompt": "Recibes en $ARGUMENTS el JSON de un evento PostToolUse (Write/Edit). Tu única tarea es mantener documentación en español de los endpoints del backend NestJS.\n\nPASOS:\n1. Extrae la ruta del archivo desde tool_input.file_path.\n2. GATE: si la ruta NO termina en \".controller.ts\", o termina en \".spec.ts\", o no está dentro de backend/, responde exactamente la palabra \"skip\" y TERMINA sin hacer nada más. No leas ni escribas archivos en ese caso.\n3. Si SÍ es un controller de NestJS: lee el archivo completo. Lee también los DTOs, interfaces, enums y tipos que el controller importe y que sean relevantes para los endpoints (parámetros, body y respuesta).\n4. Identifica cada endpoint: métodos decorados con @Get/@Post/@Put/@Patch/@Delete. Calcula la ruta completa combinando el prefijo de @Controller('...') con la ruta del método.\n5. Para CADA endpoint documenta en ESPAÑOL:\n   - **Método y ruta** completa (p. ej. `POST /usuarios/:id`).\n   - **Funcionamiento**: qué hace el endpoint, en lenguaje claro.\n   - **Input esperado**: path params, query params y body. Para cada uno indica nombre, tipo/tipado (DTO con sus campos y tipos) y si es obligatorio u opcional.\n   - **Output esperado**: forma y tipado de la respuesta exitosa, y código(s) de estado HTTP.\n   - **Errores posibles**: si se infieren del código (validaciones, guards, excepciones lanzadas).\n6. Escribe o sobrescribe la documentación en Markdown en `.claude/docs/<nombre-base-del-controller>.md` (crea el directorio si no existe). Usa el nombre del archivo del controller sin la extensión, p. ej. `app.controller.ts` -> `.claude/docs/app.md`. Sobrescribe el archivo completo para mantenerlo sincronizado con el código actual.\n7. NO modifiques código fuente ni ningún archivo fuera de .claude/docs/. Solo generas documentación. Al terminar, responde una sola línea indicando qué archivo de documentación generaste."
+          }
+        ]
+      }
+    ]
+  }
+}
