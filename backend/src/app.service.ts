@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  /** Estado de salud del servicio (para sondas/monitoreo). */
+  health(): { status: string } {
+    return { status: 'ok' };
   }
 }

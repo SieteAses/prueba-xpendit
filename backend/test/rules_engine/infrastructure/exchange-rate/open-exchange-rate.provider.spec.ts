@@ -2,6 +2,7 @@ import {
   OpenExchangeRateProvider,
   HistoricalRatesClient,
 } from '@/rules_engine/infrastructure/exchange-rate/open-exchange-rate.provider';
+import { ExchangeRateCallCounter } from '@/rules_engine/infrastructure/exchange-rate/exchange-rate-call-counter';
 import { Currency } from '@/rules_engine/domain/enums/currency.enum';
 import { Money } from '@/rules_engine/domain/value-objects/money.vo';
 
@@ -101,6 +102,37 @@ describe('OpenExchangeRateProvider', () => {
       provider.convert(Money.create(950, Currency.CLP), Currency.USD, DATE),
     ).rejects.toThrow(/OPEN_EXCHANGE_RATES_APP_ID/);
     expect(client).not.toHaveBeenCalled();
+  });
+
+  it('cuenta una llamada real a la API en cache miss (sin cache hits)', async () => {
+    const counter = new ExchangeRateCallCounter();
+    const client = fakeClient({ USD: 1, CLP: 950 });
+    const provider = new OpenExchangeRateProvider(
+      APP_ID,
+      BASE_URL,
+      client,
+      counter,
+    );
+
+    await provider.convert(Money.create(950, Currency.CLP), Currency.USD, DATE);
+
+    expect(counter.total).toEqual({ apiCalls: 1, cacheHits: 0 });
+  });
+
+  it('cuenta un cache hit al reutilizar la fecha (sin nueva llamada real)', async () => {
+    const counter = new ExchangeRateCallCounter();
+    const client = fakeClient({ USD: 1, CLP: 950, EUR: 0.92 });
+    const provider = new OpenExchangeRateProvider(
+      APP_ID,
+      BASE_URL,
+      client,
+      counter,
+    );
+
+    await provider.convert(Money.create(950, Currency.CLP), Currency.USD, DATE);
+    await provider.convert(Money.create(100, Currency.EUR), Currency.USD, DATE);
+
+    expect(counter.total).toEqual({ apiCalls: 1, cacheHits: 1 });
   });
 
   it('propaga el error si el cliente HTTP falla', async () => {

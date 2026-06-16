@@ -15,7 +15,7 @@ describe('Money', () => {
 
   it('throws when the amount is negative', () => {
     expect(() => Money.create(-1, Currency.USD)).toThrow(
-      'Amount cannot be negative',
+      'El monto no puede ser negativo',
     );
   });
 });

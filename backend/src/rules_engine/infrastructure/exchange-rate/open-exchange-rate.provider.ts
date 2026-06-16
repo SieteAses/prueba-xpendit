@@ -1,6 +1,7 @@
 import { ExchangeRatePort } from '../../application/ports/exchange-rate.port';
 import { Currency } from '../../domain/enums/currency.enum';
 import { Money } from '../../domain/value-objects/money.vo';
+import { ExchangeRateCallCounter } from './exchange-rate-call-counter';
 
 /** Respuesta del endpoint `historical` de Open Exchange Rates. */
 export interface HistoricalRatesResponse {
@@ -51,6 +52,7 @@ export class OpenExchangeRateProvider implements ExchangeRatePort {
     private readonly appId: string | undefined,
     private readonly baseUrl: string,
     private readonly client: HistoricalRatesClient = fetchHistoricalRatesClient,
+    private readonly counter?: ExchangeRateCallCounter,
   ) {}
 
   async convert(money: Money, target: Currency, date: Date): Promise<Money> {
@@ -70,6 +72,7 @@ export class OpenExchangeRateProvider implements ExchangeRatePort {
     const dateKey = OpenExchangeRateProvider.toIsoDate(date);
     const cached = this.cache.get(dateKey);
     if (cached) {
+      this.counter?.incrementCacheHit();
       return cached;
     }
 
@@ -81,6 +84,7 @@ export class OpenExchangeRateProvider implements ExchangeRatePort {
     }
 
     const url = `${this.baseUrl}/historical/${dateKey}.json?app_id=${this.appId}`;
+    this.counter?.incrementApiCall();
     const { rates } = await this.client(url);
     this.cache.set(dateKey, rates);
     return rates;

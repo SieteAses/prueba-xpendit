@@ -8,7 +8,7 @@ export class Money {
 
   static create(amount: number, currency: Currency): Money {
     if (amount < 0) {
-      throw new Error('Amount cannot be negative');
+      throw new Error('El monto no puede ser negativo');
     }
     return new Money(amount, currency);
   }

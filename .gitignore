@@ -21,6 +21,10 @@ pnpm-debug.log*
 # OS
 .DS_Store
 
+# Media / binarios grandes (grabaciones, PDFs)
+*.mov
+*.pdf
+
 # Editores / IDEs
 .idea/
 *.swp

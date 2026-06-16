@@ -171,8 +171,20 @@ que una regla lea un campo que no pidió.
 ### 2.c Siempre se pasa por todas las reglas (aunque la primera rechace)
 
 `Policy.evaluate()` **no corta** al primer rechazo: evalúa **todas** las reglas,
-recolecta todos los resultados y recién entonces decide el estado final
-(rechazado si alguna rechaza; si no, pendiente; si no, aprobado).
+recolecta todos los resultados y recién entonces decide el estado final según la
+**Resolución de Estado Final** de la tabla del PDF:
+
+| Prioridad | Criterio | Estado final |
+| --- | --- | --- |
+| 1 | Si cualquier regla gatilla RECHAZADO | **RECHAZADO** |
+| 2 | Si ninguna es RECHAZADO y al menos una es PENDIENTE | **PENDIENTE** |
+| 3 | Si ninguna es RECHAZADO ni PENDIENTE y al menos una es APROBADO | **APROBADO** |
+| Por defecto | Si no aplica ninguna regla anterior | **PENDIENTE** (sin alertas) |
+
+El **caso por defecto** es importante: si ningún criterio aplica (p. ej. un gasto
+con fecha futura, cuya antigüedad negativa no cae en ningún rango), el motor
+devuelve **PENDIENTE** —no APROBADO—, tal como exige el PDF. Está implementado
+explícitamente en `Policy.evaluate()` (rama `d`).
 
 **Por qué:** el objetivo del revisor es **capturar todas las alertas**, no sólo
 la primera. A quien revisa un gasto le sirve ver de una vez todo lo que está
@@ -204,13 +216,24 @@ el mapper.
 La política activa (`current_policy`) y las tasas de cambio están **hardcodeadas
 en stubs** dentro de infraestructura:
 
-- `InMemoryPolicyRepository` siembra la política con tres reglas:
+- `InMemoryPolicyRepository` siembra la política con las **tres reglas de la
+  tabla de políticas del PDF** (sección "Implementa las Siguientes Reglas"):
   1. **`LIMITE_ANTIGUEDAD`** — `0–30` días → aprobado; `31–60` → pendiente;
      `>60` → rechazado.
   2. **`LIMITE_FOOD`** (sólo `food`, en USD) — `≤100` → aprobado; `100–150` →
-     pendiente; `>150` → rechazado.
-  3. **`POLITICA_CENTRO_COSTO`** — `core_engineering` + `food` → rechazado.
+     pendiente (*"Requiere revisión"*); `>150` → rechazado (*"Excede límite
+     aprobado"*).
+  3. **`POLITICA_CENTRO_COSTO`** — `core_engineering` + `food` → rechazado
+     (*"Rendición prohibida"*).
 - `StubExchangeRateProvider` usa tasas fijas por USD (CLP=950, EUR=0.92, …).
+
+> **Nota de alcance.** El *ejemplo* de `Politica` del PDF incluye además un
+> límite para `transport` (`aprobado_hasta`/`pendiente_hasta` = 200). La sección
+> normativa "Implementa las Siguientes Reglas" solo exige las tres reglas de
+> arriba (antigüedad, food, centro de costo), que son las implementadas. En el
+> lote histórico, añadir el límite de `transport` no cambiaría ningún estado
+> (todos los gastos de transporte convierten a ≤ 200 USD y la antigüedad ya es la
+> restricción vinculante).
 
 Ambos detrás de sus puertos (`PolicyRepository`, `ExchangeRatePort`).
 
