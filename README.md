@@ -127,6 +127,16 @@ El cliente sube el CSV a `POST /expenses/review-file` y muestra en consola:
 Más detalle del cliente en [`client/README.md`](client/README.md) y de la fase en
 [`FASE_3.md`](FASE_3.md).
 
+## Analisis Fase 3
+
+Documento del analisis de los resultados de la Fase 3 en [`client/ANALISIS.md`](client/ANALISIS.md).
+Video del análisis:
+
+
+https://github.com/user-attachments/assets/9c811605-2262-43fd-92b8-69f146d652f2
+
+
+
 ## CI
 
 Cada `push` y `pull_request` a `master` ejecuta las pruebas unitarias y e2e
