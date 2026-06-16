@@ -1,4 +1,7 @@
+import { ReviewExpenseBatchUseCase } from '@/rules_engine/application/use-cases/review-expense-batch.use-case';
 import { ReviewPolicyUseCase } from '@/rules_engine/application/use-cases/review-policy.use-case';
+import { SystemClock } from '@/rules_engine/infrastructure/clock/system-clock';
+import { ExchangeRateCallCounter } from '@/rules_engine/infrastructure/exchange-rate/exchange-rate-call-counter';
 import { StubExchangeRateProvider } from '@/rules_engine/infrastructure/exchange-rate/stub-exchange-rate.provider';
 import { ReviewExpenseRequest } from '@/rules_engine/infrastructure/http/dto/review-expense.request';
 import { ReviewPolicyController } from '@/rules_engine/infrastructure/http/review-policy.controller';
@@ -22,11 +25,18 @@ describe('ReviewPolicy (integración)', () => {
   });
 
   beforeEach(() => {
+    const clock = new SystemClock();
     const useCase = new ReviewPolicyUseCase(
       new InMemoryPolicyRepository(),
       new StubExchangeRateProvider(),
+      clock,
     );
-    controller = new ReviewPolicyController(useCase);
+    controller = new ReviewPolicyController(
+      useCase,
+      new ReviewExpenseBatchUseCase(useCase),
+      new ExchangeRateCallCounter(),
+      clock,
+    );
   });
 
   it("convierte CLP a USD y aplica el límite 'food' (PENDIENTE)", async () => {
@@ -94,5 +104,43 @@ describe('ReviewPolicy (integración)', () => {
     expect(response.alertas.map((a) => a.codigo)).toEqual([
       'POLITICA_CENTRO_COSTO',
     ]);
+  });
+
+  it('reviewFile: detecta duplicado exacto (copia → PENDIENTE) y aísla el monto negativo', async () => {
+    const header =
+      'gasto_id,empleado_id,empleado_nombre,empleado_apellido,empleado_cost_center,categoria,monto,moneda,fecha';
+    const csv = [
+      header,
+      'g_001,e_001,Eva,Luna,sales_team,food,50,USD,2026-06-12',
+      'g_002,e_001,Eva,Luna,sales_team,food,50,USD,2026-06-12', // duplicado exacto de g_001
+      'g_neg,e_001,Eva,Luna,sales_team,food,-10,USD,2026-06-12', // monto negativo → error
+    ].join('\n');
+    const file = {
+      buffer: Buffer.from(csv, 'utf-8'),
+    } as Express.Multer.File;
+
+    const res = await controller.reviewFile(file);
+
+    // El original pasa limpio; la copia se marca PENDIENTE con el id del original.
+    expect(res.resultados[0]).toEqual({
+      gasto_id: 'g_001',
+      status: 'APROBADO',
+      alertas: [],
+    });
+    expect(res.resultados[1].gasto_id).toBe('g_002');
+    expect(res.resultados[1].status).toBe('PENDIENTE');
+    expect(res.resultados[1].alertas[0].codigo).toBe('GASTO_DUPLICADO');
+    expect(res.resultados[1].alertas[0].mensaje).toContain('g_001');
+
+    // El monto negativo (anomalía) cae en errores, sin abortar el lote.
+    expect(res.errores).toHaveLength(1);
+    expect(res.errores[0]).toMatchObject({ fila: 4, gasto_id: 'g_neg' });
+    expect(res.errores[0].error).toMatch(/negativ/i);
+
+    // Sin llamadas reales a OXR: todo en USD y con el stub.
+    expect(res.tasas_api.lote).toEqual({ llamadas_api: 0, cache_hits: 0 });
+    expect(res.total).toBe(3);
+    // La fecha de ejecución refleja el "ahora" (timers fijados en beforeAll).
+    expect(res.fecha_ejecucion).toBe('2026-06-15T12:00:00.000Z');
   });
 });

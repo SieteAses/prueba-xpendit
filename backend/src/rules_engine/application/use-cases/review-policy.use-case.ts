@@ -10,6 +10,7 @@ import { Money } from '../../domain/value-objects/money.vo';
 import { ReviewPolicyCommand } from '../dto/review-policy.command';
 import { ReviewPolicyResult } from '../dto/review-policy.result';
 import { NoActivePolicyError } from '../errors/no-active-policy.error';
+import { Clock } from '../ports/clock.port';
 import { ExchangeRatePort } from '../ports/exchange-rate.port';
 import { PolicyRepository } from '../ports/policy-repository.port';
 
@@ -40,6 +41,7 @@ export class ReviewPolicyUseCase {
   constructor(
     private readonly policies: PolicyRepository,
     private readonly exchangeRate: ExchangeRatePort,
+    private readonly clock: Clock,
   ) {}
 
   async execute(command: ReviewPolicyCommand): Promise<ReviewPolicyResult> {
@@ -75,7 +77,7 @@ export class ReviewPolicyUseCase {
       Id.create(command.employeeId),
     );
 
-    const fields = EvaluationContext.build(expense, employee, new Date());
+    const fields = EvaluationContext.build(expense, employee, this.clock.now());
     const { status, alerts } = policy.evaluate(fields);
 
     return {

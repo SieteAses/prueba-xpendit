@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { Clock, CLOCK } from './application/ports/clock.port';
 import {
   ExchangeRatePort,
   EXCHANGE_RATE_PORT,
@@ -7,10 +8,16 @@ import {
   PolicyRepository,
   POLICY_REPOSITORY,
 } from './application/ports/policy-repository.port';
+import { ReviewExpenseBatchUseCase } from './application/use-cases/review-expense-batch.use-case';
 import { ReviewPolicyUseCase } from './application/use-cases/review-policy.use-case';
+import { SystemClock } from './infrastructure/clock/system-clock';
 import { openExchangeRatesConfig } from './infrastructure/config/open-exchange-rates.config';
 import { useStubData } from './infrastructure/config/use-stub-data';
-import { OpenExchangeRateProvider } from './infrastructure/exchange-rate/open-exchange-rate.provider';
+import { ExchangeRateCallCounter } from './infrastructure/exchange-rate/exchange-rate-call-counter';
+import {
+  fetchHistoricalRatesClient,
+  OpenExchangeRateProvider,
+} from './infrastructure/exchange-rate/open-exchange-rate.provider';
 import { StubExchangeRateProvider } from './infrastructure/exchange-rate/stub-exchange-rate.provider';
 import { ReviewPolicyController } from './infrastructure/http/review-policy.controller';
 import { InMemoryPolicyRepository } from './infrastructure/persistence/in-memory-policy.repository';
@@ -31,25 +38,43 @@ import { InMemoryPolicyRepository } from './infrastructure/persistence/in-memory
       provide: POLICY_REPOSITORY,
       useClass: InMemoryPolicyRepository,
     },
+    ExchangeRateCallCounter,
+    {
+      provide: CLOCK,
+      useClass: SystemClock,
+    },
     {
       provide: EXCHANGE_RATE_PORT,
-      useFactory: (): ExchangeRatePort => {
+      useFactory: (counter: ExchangeRateCallCounter): ExchangeRatePort => {
         if (useStubData()) {
           return new StubExchangeRateProvider();
         }
         const { appId, baseUrl } = openExchangeRatesConfig();
-        return new OpenExchangeRateProvider(appId, baseUrl);
+        return new OpenExchangeRateProvider(
+          appId,
+          baseUrl,
+          fetchHistoricalRatesClient,
+          counter,
+        );
       },
+      inject: [ExchangeRateCallCounter],
     },
     {
       provide: ReviewPolicyUseCase,
       useFactory: (
         policies: PolicyRepository,
         exchangeRate: ExchangeRatePort,
-      ) => new ReviewPolicyUseCase(policies, exchangeRate),
-      inject: [POLICY_REPOSITORY, EXCHANGE_RATE_PORT],
+        clock: Clock,
+      ) => new ReviewPolicyUseCase(policies, exchangeRate, clock),
+      inject: [POLICY_REPOSITORY, EXCHANGE_RATE_PORT, CLOCK],
+    },
+    {
+      provide: ReviewExpenseBatchUseCase,
+      useFactory: (reviewPolicy: ReviewPolicyUseCase) =>
+        new ReviewExpenseBatchUseCase(reviewPolicy),
+      inject: [ReviewPolicyUseCase],
     },
   ],
-  exports: [ReviewPolicyUseCase],
+  exports: [ReviewPolicyUseCase, ReviewExpenseBatchUseCase],
 })
 export class RulesEngineModule {}

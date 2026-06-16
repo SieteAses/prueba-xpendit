@@ -48,7 +48,8 @@ describe('ReviewPolicyUseCase', () => {
     policy = Policy.create([overThreshold(1000)]);
     policies = { findCurrent: jest.fn().mockResolvedValue(policy) };
     exchangeRate = { convert: jest.fn() };
-    useCase = new ReviewPolicyUseCase(policies, exchangeRate);
+    const clock = { now: () => new Date('2026-06-01T00:00:00Z') };
+    useCase = new ReviewPolicyUseCase(policies, exchangeRate, clock);
   });
 
   it('evalúa contra la política activa (current_policy)', async () => {

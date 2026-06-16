@@ -1,0 +1,8 @@
+gasto_id,empleado_id,empleado_nombre,empleado_apellido,empleado_cost_center,categoria,monto,moneda,fecha
+g_001,e_001,Eva,Luna,sales_team,food,100,USD,2026-05-13
+g_002,e_002,Ana,Soto,core_engineering,software,9000,USD,2026-05-14
+g_003,e_003,Luis,Pérez,marketing,transport,-45000,CLP,2026-05-15
+g_004,e_004,Marta,Díaz,finance,lodging,250,EUR,2026-05-16
+g_005,e_001,Eva,Luna,sales_team,food,100,USD,2026-05-13
+g_006,e_006,Nora,Vega,sales_team,food,100,USD,2026-05-13
+g_bad,e_005,Pedro,Gómez,sales_team,food,abc,USD,2026-05-17
