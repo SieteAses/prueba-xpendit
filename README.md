@@ -6,13 +6,16 @@ Prueba técnica de Xpendit.
   evalúa contra la política activa de la empresa y devuelve un estado (`APROBADO`,
   `PENDIENTE`, `RECHAZADO`) junto con las alertas levantadas. Las reglas y sus
   alertas (`LIMITE_ANTIGUEDAD`, `LIMITE_FOOD`, `POLITICA_CENTRO_COSTO`)
-  implementan **exactamente la tabla de políticas del PDF de la prueba**.
+  implementan **exactamente la tabla de políticas del PDF de la prueba**. Para más
+  detalle, consulta [`FASE_1.md`](FASE_1.md).
 - **Fase 2** — **tasas de cambio reales**: convierte cada gasto a USD con la **tasa
   histórica del día** vía [Open Exchange Rates](https://openexchangerates.org),
-  reemplazando las tasas fijas de la Fase 1.
+  reemplazando las tasas fijas de la Fase 1. Para más detalle, consulta
+  [`FASE_2.md`](FASE_2.md).
 - **Fase 3** — **revisión por lote (CSV)**: revisa un archivo completo, detecta
   anomalías (montos negativos y cobros duplicados), optimiza las llamadas a la API
-  con caché por fecha y reporta la fecha de ejecución.
+  con caché por fecha y reporta la fecha de ejecución. Para más detalle, consulta
+  [`FASE_3.md`](FASE_3.md).
 
 El backend está construido con **NestJS** siguiendo **Arquitectura Limpia /
 Hexagonal** y desarrollado con **TDD**.
@@ -102,12 +105,12 @@ Deja esta terminal abierta y corriendo.
 ### 4. Ejecuta el cliente sobre un CSV (terminal 2)
 
 En **otra** terminal, instala las dependencias del cliente y lánzalo apuntando a
-un CSV (incluimos `expenses.sample.csv` como ejemplo):
+un CSV (incluimos `gastos_historicos.csv` como ejemplo):
 
 ```bash
 cd client
 pnpm install                          # sólo la primera vez
-node review-file.ts ./expenses.sample.csv
+node review-file.ts ./gastos_historicos.csv
 ```
 
 El cliente sube el CSV a `POST /expenses/review-file` y muestra en consola:
